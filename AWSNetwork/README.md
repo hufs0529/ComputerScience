@@ -59,18 +59,56 @@
 > 192.168.0.0 ~ 192.168.255.255까지 사용을 의미
 ---
 ## [VPC대역 정하기]
+![화면 캡처 2023-07-16 162630](https://github.com/hufs0529/ComputerScience/assets/81501114/fca51851-7e2c-4d75-a759-d989290857d5)
+##### 1. RFC 1918에 정의된 사설 IP 대역 사용 권장
+> PUBLIC IP가 부족하기 때문이다
+> VPC 내에 EC2, RDS등 많은 컨테이너가 배포되어 있다면 많은 IP가 필요하다
+> 보안때문이다!!! vpc 안에서는 PRIVATE을 사용함으로써 내부끼리만 통신하므로 외부로부터의 침입을 원천 봉쇄한다
+##### 2. VPC 한번 정하면 변경 불가 BUT 대역 추가는 가능
 ---
 ## [VPC SUBNETTING]
+![화면 캡처 2023-07-16 162940](https://github.com/hufs0529/ComputerScience/assets/81501114/f7e4d900-0e32-43bc-b644-8782f74063cb)
+##### 1. VPC IP 대역으로 할당된 대역을 하나의 라우팅 그룹으로 관라힌다면 라우팅에 부담이 갈 수 있다
+##### 2. VPC 구조를 계층적 구조를 활용하여 네트워크를 쪼개서 관리 가능하다
+> 이를 Subnetting
 ---
 ## [VPC SUBNET 모범사례]
+![화면 캡처 2023-07-16 163114](https://github.com/hufs0529/ComputerScience/assets/81501114/5004efbb-58c1-4d3b-876b-6de70ce7afc0)
+##### 1. 서브넷은 라우팅 테이블과 연결하여 네트워크의 흐름 제어 가능
+##### 2. 외부와 통신 가능한 PUBLIC, 차단된 PRIVATE SUBNET 분리한다
+##### 3. PUBLIC은 인터넷과 통신 가능하기 때문에 필요한 서버를 제외를 배치하지 않는것이 좋다
+##### 4. VPC에서 배포된 서버들이 인터넷으로 노출되는 것을 최소화
+##### 5. 서브넷으로 IP대역을 분리한 후 ROUTE TABLE과 연결하여 네트워크의 흐름을 제어한다
 ---
 ## [VPC Routing 전략]
+![화면 캡처 2023-07-16 163129](https://github.com/hufs0529/ComputerScience/assets/81501114/65f6ac14-f23d-4297-a2a5-1998a60766f3)
+##### PUBLIC SUBNET은 연결된 라우트 테이블에 VPC에서 사용하는 IP대역 이외에 모든 트래픽을 인터넷 GATEWAY( VPC와 외부 인터넷 단과 통신 가능하게)로 라우팅되게 설정
+##### private subnet에 배포된 서비스가 인터넷에 접근하기 위해서는 2가지 필요
+> 1. 네트워크 트래픽이 외부로 나갈수있도록 설정하기
+> 2. 외부 인터넷으로 나갈때 통신할 public ip  -> 이때 NAT 게이트웨이가  필요하다. private subnet에 할당된 라우트 테이블은 로컬 ip 대역 이외에 모든 트래픽은 nat 게이트웨이로 나갈 수 있도록 설정, NAT 게이트에이가 할당된 IP 를 통해서 인터넷과 통신하며 결과가 NAT르 돌아오면 이 것을 PRIVATE으로 반환시켜 전달한다.
+##### NAT 게이트웨이가 B 가용 영역에 배포된 상태에서 B에 문제가 생긴다면 가용영역 A는 외부와 통신이 불가능할 것이다
+![화면 캡처 2023-07-16 163458](https://github.com/hufs0529/ComputerScience/assets/81501114/25b5bf5b-8434-48b2-ad74-b44febc6d6a8)
+#### A에도 NAT 게이터웨이를 설정할 수 있겠지만 이중화시키킬 경우 비용이...
+#### RDS의 경우 외부와 통신할 필요가 없기 때문에 VPC내부로만 통신이 가능하도록 설정해서 외부 트래픽과 통신 봉쇄 가능
+
 ---
 ## [VPC NACL 전략]
+![화면 캡처 2023-07-16 163544](https://github.com/hufs0529/ComputerScience/assets/81501114/08c38812-74d8-4332-9bff-74447e4d92d0)
+##### PUBLIC SUBNET에서 DDOS공격을 받을 때 DDOS IP대역을 차단하여 리소스 보호 가능
 ---
 ## [VPC SECURITY GROUP 전략]
+![화면 캡처 2023-07-16 163631](https://github.com/hufs0529/ComputerScience/assets/81501114/e3744fb4-e1e3-481e-9554-62f95e37e2cb)
+##### 1. NLB는 HTTP를 외하여  0.0.0.0(모든 대역)에서 트래픽 허용(불특정 다수)
+##### 2. EC2(웹서버)는 SG-FMASKDF로 NLB 대역에서만 트래픽 허용 -> 보안 그룹 서로 참조 가능!!!
+##### 3. RDS의 보안 그룹은 EC2가  포함된 보안 그룹만 허용
+
 ---
 ## [Hybrid Networking]
+![화면 캡처 2023-07-16 163730](https://github.com/hufs0529/ComputerScience/assets/81501114/e35fffe7-066f-4ce5-be63-f18b833c0b8e)
+##### vpc는 독립된 가상의 네트워크 환경의 서비스를 일컬음
+##### vpc 내 서버들 이외에 다른 aws 서비스도 외부 인터넷과 동일하게 인터넷 트래픽 제어
+##### public subnet에 있는 ec2가 s3(서브넷 외부에 있는 것)과 통신하기 위해서는 인터넷 게이트웨이를 통해서 s3로 서비스를 찾아가게 된다
+
 ---
 ## [엔드포인트]
 ---
