@@ -61,3 +61,7 @@ public void addGif(Gif gif) {
 ```
 #### addGif 메소드에서 입력받은 writer의 사용자 정보(id)를 셋팅하는 추가적인 작업이 있어야 DB에 반영이 된다
 #### 이를 위해 Member entity의 ```private Long id;``` 변수에 ```@Column```어노테이션을 추가해야 null이 발생하지 않는다
+
+
+[출처][https://www.google.com](https://soojong.tistory.com/entry/JPA-ManyToOne-OneToMany-%EC%9D%B4%ED%95%B4%ED%95%98%EA%B8%B0
+
